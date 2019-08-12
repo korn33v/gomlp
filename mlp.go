@@ -1,4 +1,4 @@
-package network
+package gomlp
 
 import (
 	"math"
