@@ -7,32 +7,26 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// MLP is a feedforward neural network with 3 layers
-type MLP interface {
-	Train(inputData []float64, targetData []float64)
-	Predict(inputData []float64) mat.Matrix
-}
-
-// Network is an implementation of MLP
+// Network ... s
 type Network struct {
-	inputs        int
-	hiddens       int
-	outputs       int
-	hiddenWeights *mat.Dense
-	outputWeights *mat.Dense
-	learningRate  float64
+	Inputs        int
+	Hiddens       int
+	Outputs       int
+	HiddenWeights *mat.Dense
+	OutputWeights *mat.Dense
+	LearningRate  float64
 }
 
-// New creates a neural network with random weights
-func New(input, hidden, output int, rate float64) (net *Network) {
+// CreateNetwork creates a neural network with random weights
+func CreateNetwork(input, hidden, output int, rate float64) (net *Network) {
 	net = &Network{
-		inputs:       input,
-		hiddens:      hidden,
-		outputs:      output,
-		learningRate: rate,
+		Inputs:       input,
+		Hiddens:      hidden,
+		Outputs:      output,
+		LearningRate: rate,
 	}
-	net.hiddenWeights = mat.NewDense(net.hiddens, net.inputs, mh.RandomArray(net.inputs*net.hiddens, float64(net.inputs)))
-	net.outputWeights = mat.NewDense(net.outputs, net.hiddens, mh.RandomArray(net.hiddens*net.outputs, float64(net.hiddens)))
+	net.HiddenWeights = mat.NewDense(net.Hiddens, net.Inputs, mh.RandomArray(net.Inputs*net.Hiddens, float64(net.Inputs)))
+	net.OutputWeights = mat.NewDense(net.Outputs, net.Hiddens, mh.RandomArray(net.Hiddens*net.Outputs, float64(net.Hiddens)))
 
 	return net
 }
@@ -41,24 +35,24 @@ func New(input, hidden, output int, rate float64) (net *Network) {
 func (net *Network) Train(inputData []float64, targetData []float64) {
 	// feedforward
 	inputs := mat.NewDense(len(inputData), 1, inputData)
-	hiddenInputs := mh.Dot(net.hiddenWeights, inputs)
+	hiddenInputs := mh.Dot(net.HiddenWeights, inputs)
 	hiddenOutputs := mh.Apply(sigmoid, hiddenInputs)
-	finalInputs := mh.Dot(net.outputWeights, hiddenOutputs)
+	finalInputs := mh.Dot(net.OutputWeights, hiddenOutputs)
 	finalOutputs := mh.Apply(sigmoid, finalInputs)
 
 	// find errors
 	targets := mat.NewDense(len(targetData), 1, targetData)
 	outputErrors := mh.Subtract(targets, finalOutputs)
-	hiddenErrors := mh.Dot(net.outputWeights.T(), outputErrors)
+	hiddenErrors := mh.Dot(net.OutputWeights.T(), outputErrors)
 
 	// backpropagate
-	net.outputWeights = mh.Add(net.outputWeights,
-		mh.Scale(net.learningRate,
+	net.OutputWeights = mh.Add(net.OutputWeights,
+		mh.Scale(net.LearningRate,
 			mh.Dot(mh.Multiply(outputErrors, sigmoidPrime(finalOutputs)),
 				hiddenOutputs.T()))).(*mat.Dense)
 
-	net.hiddenWeights = mh.Add(net.hiddenWeights,
-		mh.Scale(net.learningRate,
+	net.HiddenWeights = mh.Add(net.HiddenWeights,
+		mh.Scale(net.LearningRate,
 			mh.Dot(mh.Multiply(hiddenErrors, sigmoidPrime(hiddenOutputs)),
 				inputs.T()))).(*mat.Dense)
 }
@@ -67,9 +61,9 @@ func (net *Network) Train(inputData []float64, targetData []float64) {
 func (net *Network) Predict(inputData []float64) mat.Matrix {
 	// feedforward
 	inputs := mat.NewDense(len(inputData), 1, inputData)
-	hiddenInputs := mh.Dot(net.hiddenWeights, inputs)
+	hiddenInputs := mh.Dot(net.HiddenWeights, inputs)
 	hiddenOutputs := mh.Apply(sigmoid, hiddenInputs)
-	finalInputs := mh.Dot(net.outputWeights, hiddenOutputs)
+	finalInputs := mh.Dot(net.OutputWeights, hiddenOutputs)
 	finalOutputs := mh.Apply(sigmoid, finalInputs)
 
 	return finalOutputs
